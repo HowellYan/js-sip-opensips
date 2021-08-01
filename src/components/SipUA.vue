@@ -72,7 +72,7 @@ export default {
       // 监听通话
       this.ua.on("newRTCSession", function (data) {
         console.log(data);
-        if (data.originator == 'remote') { //incoming call
+        if (data.originator === 'remote') { //incoming call
           console.info("incomingSession, answer the call");
           that.initMedia();
           that.incomingSession = data.session;
@@ -95,7 +95,7 @@ export default {
       // 监听短信
       this.ua.on("newMessage", function (data) {
         console.log(data);
-        if (data.originator == 'local') {
+        if (data.originator === 'local') {
           console.info('onNewMessage , OutgoingRequest - ', data.request);
         } else {
           console.info('onNewMessage , IncomingRequest - ', data.request);
