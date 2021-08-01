@@ -38,7 +38,9 @@ export default {
   },
   methods: {
     init() {
-      const socket = new JsSIP.WebSocketInterface('ws://192.168.10.109:5062');
+      //const socket = new JsSIP.WebSocketInterface('ws://192.168.10.109:5062');
+      //const socket = new JsSIP.WebSocketInterface('wss://192.168.10.109:5063');
+      const socket = new JsSIP.WebSocketInterface('wss://api.atomscat.com:5063');
       const configuration = {
         sockets: [socket],
         uri: 'sip:1005@192.168.10.109',
@@ -53,9 +55,15 @@ export default {
       this.ua = new JsSIP.UA(configuration);
     },
     getLocalMedia(stream) {
-      console.info('Received local media stream');
+      console.info('Received local media stream', stream);
       this.localStream = stream;
-      this.$refs.videoView.src = URL.createObjectURL(stream);
+      // this.$refs.videoView.src = URL.createObjectURL(stream);
+      const video = this.$refs.videoView;
+      video.srcObject = stream;
+      video.onloadedmetadata = function(e) {
+        video.play();
+        console.log(e)
+      };
     },
     initMedia() {
       navigator.mediaDevices.getUserMedia(this.constraints).then(this.getLocalMedia).catch(function(err) {
@@ -64,7 +72,6 @@ export default {
     },
     register() {
       this.init();
-      this.initMedia();
       this.ua.registrator().setExtraHeaders([
         'X-Foo: bar'
       ]);
@@ -83,6 +90,18 @@ export default {
               mandatory: {maxWidth: 640, maxHeight: 360}
             }, 'mediaStream': that.localStream
           });
+
+          that.$confirm('是否接听?', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+
+          }).catch(() => {
+
+          });
+
+
         } else {
           console.info("outgoingSession");
           that.outgoingSession = data.session;
@@ -113,16 +132,16 @@ export default {
       // Register callbacks to desired call events
       const eventHandlers = {
         'progress': function (e) {
-          console.log('call is in progress: ' + e.data);
+          console.log('call is in progress: ' + e);
         },
         'failed': function (e) {
-          console.log('call failed with cause: ' + e.data.cause);
+          console.log('call failed with cause: ' + e);
         },
         'ended': function (e) {
-          console.log('call ended with cause: ' + e.data.cause);
+          console.log('call ended with cause: ' + e);
         },
         'confirmed': function (e) {
-          console.log('call confirmed: ' + e.data);
+          console.log('call confirmed: ' + e);
         }
       };
 
