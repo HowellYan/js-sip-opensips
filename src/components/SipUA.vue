@@ -91,14 +91,19 @@ export default {
             }, 'mediaStream': that.localStream
           });
 
+          const options = {
+
+          }
+
           that.$confirm('是否接听?', '提示', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             type: 'warning'
           }).then(() => {
-
+            that.incomingSession.answer(options);
           }).catch(() => {
-
+            //
+            that.ua.terminateSessions();
           });
 
 
