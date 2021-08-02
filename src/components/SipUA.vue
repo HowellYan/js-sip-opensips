@@ -9,7 +9,10 @@
     <el-input v-model="msg" placeholder="信息"></el-input>
     <br/>
     <el-button @click="sendMsg">sendMsg</el-button>
-    <video ref="videoView" autoplay height="320px" width="420px"></video>
+    <video ref="localVideoView" autoplay height="320px" width="420px"></video>
+
+    <video ref="remoteVideoStream" autoplay height="320px" width="420px"/>
+    <audio/>
   </div>
 </template>
 
@@ -58,16 +61,44 @@ export default {
       console.info('Received local media stream', stream);
       this.localStream = stream;
       // this.$refs.videoView.src = URL.createObjectURL(stream);
-      const video = this.$refs.videoView;
+      const video = this.$refs.localVideoView;
       video.srcObject = stream;
-      video.onloadedmetadata = function(e) {
+      video.onloadedmetadata = function (e) {
         video.play();
         console.log(e)
       };
     },
     initMedia() {
-      navigator.mediaDevices.getUserMedia(this.constraints).then(this.getLocalMedia).catch(function(err) {
+      navigator.mediaDevices.getUserMedia(this.constraints).then(this.getLocalMedia).catch(function (err) {
         console.error(err.name + ": " + err.message);
+      });
+    },
+    // 接电话
+    answer() {
+      this.initMedia();
+      // todo
+      this.incomingSession.answer({
+        mediaConstraints: {
+          audio: true,
+          video: false
+        },
+        // rtcOfferConstraints: {'offerToReceiveAudio': true, 'offerToReceiveVideo': false},
+        sessionTimersExpires: 3600 * 24,
+        // mediaStream: this.localStream
+      });
+      this.addRemoteStream();
+    },
+    //  add remote stream
+    addRemoteStream() {
+      console.log(this.incomingSession)
+      this.incomingSession.connection.addEventListener('onaddstream', (event) => {
+        console.log(event);
+        const video = this.$refs.remoteVideoStream.srcObject;
+        video.srcObject = event.stream;
+        video.onloadedmetadata = function (e) {
+          video.play();
+          console.log(e)
+        };
       });
     },
     register() {
@@ -81,32 +112,18 @@ export default {
         console.log(data);
         if (data.originator === 'remote') { //incoming call
           console.info("incomingSession, answer the call");
-          that.initMedia();
           that.incomingSession = data.session;
-          data.session.answer({
-            'mediaConstraints': {
-              'audio': true,
-              'video': true,
-              mandatory: {maxWidth: 640, maxHeight: 360}
-            }, 'mediaStream': that.localStream
-          });
-
-          const options = {
-
-          }
-
           that.$confirm('是否接听?', '提示', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             type: 'warning'
           }).then(() => {
-            that.incomingSession.answer(options);
+            // 接电话
+            that.answer();
           }).catch(() => {
             //
             that.ua.terminateSessions();
           });
-
-
         } else {
           console.info("outgoingSession");
           that.outgoingSession = data.session;
