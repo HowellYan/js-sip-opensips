@@ -9,10 +9,10 @@
     <el-input v-model="msg" placeholder="信息"></el-input>
     <br/>
     <el-button @click="sendMsg">sendMsg</el-button>
-    <video ref="localVideoView" autoplay height="320px" width="420px"></video>
-
+    <video ref="localVideoView" autoplay height="320px" width="420px"/>
+    <audio ref="localAudioView"  />
     <video ref="remoteVideoStream" autoplay height="320px" width="420px"/>
-    <audio/>
+    <audio ref="remoteAudioView" />
   </div>
 </template>
 
@@ -39,6 +39,9 @@ export default {
       }
     }
   },
+  mounted() {
+    this.register();
+  },
   methods: {
     init() {
       //const socket = new JsSIP.WebSocketInterface('ws://192.168.10.109:5062');
@@ -56,12 +59,21 @@ export default {
         register_expires: 3600 * 24
       };
       this.ua = new JsSIP.UA(configuration);
+      this.ua.on("registered", function (data) {
+        console.info("registered: ", data.response.status_code, ",", data.response.reason_phrase);
+      })
     },
     getLocalMedia(stream) {
       console.info('Received local media stream', stream);
       this.localStream = stream;
       // this.$refs.videoView.src = URL.createObjectURL(stream);
       const video = this.$refs.localVideoView;
+      const audio = this.$refs.localAudioView;
+      audio.srcObject = stream;
+      audio.onloadedmetadata = function (e) {
+        audio.play();
+        console.log(e)
+      };
       video.srcObject = stream;
       video.onloadedmetadata = function (e) {
         video.play();
@@ -75,25 +87,25 @@ export default {
     },
     // 接电话
     answer() {
-      this.initMedia();
+      // this.initMedia();
       // todo
       this.incomingSession.answer({
         mediaConstraints: {
           audio: true,
-          video: false
+          video: true
         },
-        // rtcOfferConstraints: {'offerToReceiveAudio': true, 'offerToReceiveVideo': false},
-        sessionTimersExpires: 3600 * 24,
-        // mediaStream: this.localStream
+        //rtcOfferConstraints: {'offerToReceiveAudio': true, 'offerToReceiveVideo': false},
+        // sessionTimersExpires: 3600 * 24,
+        mediaStream: this.localStream
       });
-      this.addRemoteStream();
+      //this.addRemoteStream();
     },
     //  add remote stream
     addRemoteStream() {
       console.log(this.incomingSession)
       this.incomingSession.connection.addEventListener('onaddstream', (event) => {
         console.log(event);
-        const video = this.$refs.remoteVideoStream.srcObject;
+        const video = this.$refs.remoteVideoStream;
         video.srcObject = event.stream;
         video.onloadedmetadata = function (e) {
           video.play();
@@ -103,6 +115,7 @@ export default {
     },
     register() {
       this.init();
+      this.initMedia();
       this.ua.registrator().setExtraHeaders([
         'X-Foo: bar'
       ]);
@@ -128,7 +141,7 @@ export default {
           console.info("outgoingSession");
           that.outgoingSession = data.session;
           that.outgoingSession.on('connecting', function (data) {
-            console.info('onConnecting - ', data.request);
+            console.info(data);
           });
         }
       });
@@ -151,6 +164,7 @@ export default {
     },
     // 拨打电话
     call() {
+      const that = this;
       // Register callbacks to desired call events
       const eventHandlers = {
         'progress': function (e) {
@@ -163,17 +177,34 @@ export default {
           console.log('call ended with cause: ' + e);
         },
         'confirmed': function (e) {
-          console.log('call confirmed: ' + e);
+          console.log(e);
+        },
+        'peerconnection': function (event) {
+          console.log(event);
+          event.peerconnection.onaddstream = function(ev){
+            console.info('onaddstream from remote - ', ev);
+            const audio = that.$refs.remoteAudioView;
+            audio.srcObject = ev.stream;
+            audio.onloadedmetadata = function (e) {
+              audio.play();
+              console.log(e)
+            };
+            const video = that.$refs.remoteVideoStream;
+            video.srcObject = ev.stream;
+            video.onloadedmetadata = function (e) {
+              video.play();
+              console.log(e)
+            };
+          };
         }
       };
 
       const options = {
         'eventHandlers': eventHandlers,
-        'mediaConstraints': {'audio': true, 'video': true}
+        'mediaConstraints': {'audio': true, 'video': true},
+         mediaStream: this.localStream
       };
-
       const session = this.ua.call(this.callSipAdder, options);
-
       console.log(session);
     },
     // 发信息
