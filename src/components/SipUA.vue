@@ -144,7 +144,7 @@ export default {
             console.info(data);
           });
         }
-      });
+    });
 
       // 监听短信
       this.ua.on("newMessage", function (data) {
