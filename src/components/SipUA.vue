@@ -13,7 +13,6 @@
     <el-button @click="getMediaState">getMediaState</el-button>
     <br/>
     <video id="video" ref="localVideoView" autoplay height="320px" width="420px"/>
-    <audio id="audio" ref="localAudioView" autoplay controls/>
     <video ref="remoteVideoStream" autoplay height="320px" width="420px"/>
     <audio ref="remoteAudioView" autoplay controls/>
   </div>
@@ -69,17 +68,7 @@ export default {
     },
     getLocalMedia(stream) {
       console.info('Received local media stream', stream);
-      // this.$refs.videoView.src = URL.createObjectURL(stream);
       const video = this.$refs.localVideoView;
-      const audio = this.$refs.localAudioView;
-      audio.srcObject = stream;
-      audio.onloadstart = (e) => {
-        audio.play();
-        console.log(e);
-      };
-      audio.onerror = () => {
-        alert('录音加载失败...');
-      };
       video.srcObject = stream;
       video.onloadedmetadata = function (e) {
         video.play();
@@ -106,7 +95,6 @@ export default {
         },
         // rtcOfferConstraints: {'offerToReceiveAudio': true, 'offerToReceiveVideo': false},
         // sessionTimersExpires: 3600 * 24,
-        // mediaStream: this.localStream
       });
       this.addRemoteStream();
     },
@@ -215,7 +203,6 @@ export default {
         // 配置请求头信息
         'extraHeaders': ["X-set-id: 1"],
         'mediaConstraints': {'audio': true, 'video': true},
-        // mediaStream: this.localStream
       };
       const session = this.ua.call(this.callSipAdder, options);
       console.log(session);
