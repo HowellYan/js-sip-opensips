@@ -9,10 +9,13 @@
     <el-input v-model="msg" placeholder="信息"></el-input>
     <br/>
     <el-button @click="sendMsg">sendMsg</el-button>
-    <video ref="localVideoView" autoplay height="320px" width="420px"/>
-    <audio ref="localAudioView"  />
+    <br/>
+    <el-button @click="getMediaState">getMediaState</el-button>
+    <br/>
+    <video id="video" ref="localVideoView" autoplay height="320px" width="420px"/>
+    <audio id="audio" ref="localAudioView" autoplay controls/>
     <video ref="remoteVideoStream" autoplay height="320px" width="420px"/>
-    <audio ref="remoteAudioView" />
+    <audio ref="remoteAudioView" autoplay controls/>
   </div>
 </template>
 
@@ -24,7 +27,7 @@ export default {
   data() {
     return {
       ua: Object,
-      callSipAdder: "sip:1002@192.168.10.109",
+      callSipAdder: "sip:1006@192.168.10.109",
       msg: "",
       incomingSession: Object,
       outgoingSession: Object,
@@ -50,6 +53,7 @@ export default {
       const configuration = {
         sockets: [socket],
         uri: 'sip:1005@192.168.10.109',
+        contact_uri: 'sip:1005@192.168.10.109;transport=ws',
         authorization_user: '1005',
         password: '1234',
         display_name: '1005',
@@ -65,53 +69,71 @@ export default {
     },
     getLocalMedia(stream) {
       console.info('Received local media stream', stream);
-      this.localStream = stream;
       // this.$refs.videoView.src = URL.createObjectURL(stream);
       const video = this.$refs.localVideoView;
       const audio = this.$refs.localAudioView;
       audio.srcObject = stream;
-      audio.onloadedmetadata = function (e) {
+      audio.onloadstart = (e) => {
         audio.play();
-        console.log(e)
+        console.log(e);
+      };
+      audio.onerror = () => {
+        alert('录音加载失败...');
       };
       video.srcObject = stream;
       video.onloadedmetadata = function (e) {
         video.play();
-        console.log(e)
+        console.log(e);
       };
+      this.localStream = stream;
     },
     initMedia() {
       navigator.mediaDevices.getUserMedia(this.constraints).then(this.getLocalMedia).catch(function (err) {
         console.error(err.name + ": " + err.message);
       });
     },
+    //
+    getMediaState() {
+      // const mediaRecorder = new MediaRecorder(this.localStream);
+      console.log(this.localStream)
+    },
     // 接电话
     answer() {
-      // this.initMedia();
-      // todo
       this.incomingSession.answer({
         mediaConstraints: {
           audio: true,
           video: true
         },
-        //rtcOfferConstraints: {'offerToReceiveAudio': true, 'offerToReceiveVideo': false},
+        // rtcOfferConstraints: {'offerToReceiveAudio': true, 'offerToReceiveVideo': false},
         // sessionTimersExpires: 3600 * 24,
-        mediaStream: this.localStream
+        // mediaStream: this.localStream
       });
-      //this.addRemoteStream();
+      this.addRemoteStream();
     },
     //  add remote stream
     addRemoteStream() {
       console.log(this.incomingSession)
       this.incomingSession.connection.addEventListener('onaddstream', (event) => {
-        console.log(event);
-        const video = this.$refs.remoteVideoStream;
-        video.srcObject = event.stream;
-        video.onloadedmetadata = function (e) {
-          video.play();
-          console.log(e)
-        };
+        console.log('onaddstream', event);
+        this.setRemoteStream(event);
       });
+    },
+    setRemoteStream(event) {
+      const video = this.$refs.remoteVideoStream;
+      const audio = this.$refs.remoteAudioView;
+      video.srcObject = event.stream;
+      video.onloadedmetadata = function (e) {
+        video.play();
+        console.log(e)
+      };
+      audio.srcObject = event.stream;
+      audio.onloadstart = (e) => {
+        audio.play();
+        console.log(e);
+      };
+      audio.onerror = () => {
+        alert('录音加载失败...');
+      };
     },
     register() {
       this.init();
@@ -144,7 +166,7 @@ export default {
             console.info(data);
           });
         }
-    });
+      });
 
       // 监听短信
       this.ua.on("newMessage", function (data) {
@@ -181,28 +203,19 @@ export default {
         },
         'peerconnection': function (event) {
           console.log(event);
-          event.peerconnection.onaddstream = function(ev){
+          event.peerconnection.onaddstream = function (ev) {
             console.info('onaddstream from remote - ', ev);
-            const audio = that.$refs.remoteAudioView;
-            audio.srcObject = ev.stream;
-            audio.onloadedmetadata = function (e) {
-              audio.play();
-              console.log(e)
-            };
-            const video = that.$refs.remoteVideoStream;
-            video.srcObject = ev.stream;
-            video.onloadedmetadata = function (e) {
-              video.play();
-              console.log(e)
-            };
+            that.setRemoteStream(ev);
           };
         }
       };
 
       const options = {
         'eventHandlers': eventHandlers,
+        // 配置请求头信息
+        'extraHeaders': ["X-set-id: 1"],
         'mediaConstraints': {'audio': true, 'video': true},
-         mediaStream: this.localStream
+        // mediaStream: this.localStream
       };
       const session = this.ua.call(this.callSipAdder, options);
       console.log(session);
