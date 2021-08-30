@@ -26,7 +26,7 @@ export default {
   data() {
     return {
       ua: Object,
-      callSipAdder: "sip:1006@192.168.10.109",
+      callSipAdder: "sip:1004@192.168.10.109",
       msg: "",
       incomingSession: Object,
       outgoingSession: Object,
@@ -59,7 +59,7 @@ export default {
         // 计时器
         session_timers: false,
         // 注册会话超时时间
-        register_expires: 3600 * 24
+        register_expires: 30
       };
       this.ua = new JsSIP.UA(configuration);
       this.ua.on("registered", function (data) {
