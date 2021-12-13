@@ -51,11 +51,11 @@ export default {
       const socket = new JsSIP.WebSocketInterface('wss://api.atomscat.com:5063');
       const configuration = {
         sockets: [socket],
-        uri: 'sip:1005@192.168.10.109',
-        contact_uri: 'sip:1005@192.168.10.109;transport=ws',
-        authorization_user: '1005',
+        uri: 'sip:1003@192.168.10.140',
+        contact_uri: 'sip:1003@192.168.10.140;transport=ws',
+        authorization_user: '1003',
         password: '1234',
-        display_name: '1005',
+        display_name: '1003',
         // 计时器
         session_timers: false,
         // 注册会话超时时间
