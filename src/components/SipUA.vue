@@ -46,20 +46,20 @@ export default {
   },
   methods: {
     init() {
-      //const socket = new JsSIP.WebSocketInterface('ws://192.168.10.109:5062');
+      const socket = new JsSIP.WebSocketInterface('ws://192.168.181.128:5062');
       //const socket = new JsSIP.WebSocketInterface('wss://192.168.10.109:5063');
-      const socket = new JsSIP.WebSocketInterface('wss://api.atomscat.com:5063');
+      //const socket = new JsSIP.WebSocketInterface('wss://lnjk.easemob.top:8883/testjssip');
       const configuration = {
         sockets: [socket],
-        uri: 'sip:1003@192.168.10.140',
-        contact_uri: 'sip:1003@192.168.10.140;transport=ws',
-        authorization_user: '1003',
-        password: '1234',
-        display_name: '1003',
+        uri: 'sip:1002@atomscat.com',
+        contact_uri: 'sip:1002@atomscat.com;transport=ws',
+        authorization_user: '1002',
+        password: '123456',
+        display_name: '1002',
         // 计时器
-        session_timers: false,
+        session_timers: true,
         // 注册会话超时时间
-        register_expires: 30
+        register_expires: 120
       };
       this.ua = new JsSIP.UA(configuration);
       this.ua.on("registered", function (data) {
