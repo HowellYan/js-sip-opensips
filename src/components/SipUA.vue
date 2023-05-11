@@ -41,7 +41,7 @@ export default {
             localStream: Object,
             constraints: {
                 audio: true,
-                video: true,
+                video: false,
                 mandatory: {
                     maxWidth: 640,
                     maxHeight: 360
@@ -54,17 +54,15 @@ export default {
                 },
                 pcConfig:
                     {
-                        "iceServers":
+                        iceServers:
                             [
                                 {
-                                    "urls":
+                                    urls:
                                         [
-                                            "stun:stun.qq.com"
+                                            "stun:stun.qq.com", "stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302", "stun:stun3.l.google.com:19302", "stun:stun4.l.google.com:19302"
                                         ]
                                 },
                             ],
-                        "iceTransportPolicy": "all",
-                        "rtcpMuxPolicy": "negotiate"
                     },
             }
         }
@@ -159,21 +157,21 @@ export default {
                     that.ua.terminateSessions();
                 });
             });
-            data.session.on("accepted", function () {
+            data.session.on("accepted", function (event) {
                 // the call has answered
-                console.log("accepted");
+                console.log("accepted", event);
             });
-            data.session.on("confirmed", function () {
+            data.session.on("confirmed", function (event) {
                 // this handler will be called for incoming calls too
-                console.log("confirmed");
+                console.log("confirmed", event);
             });
-            data.session.on("ended", function () {
+            data.session.on("ended", function (event) {
                 // the call has ended
-                console.log("ended");
+                console.log("ended", event);
             });
-            data.session.on("failed", function () {
+            data.session.on("failed", function (event) {
                 // unable to establish the call
-                console.log("failed");
+                console.log("failed", event);
             });
             data.session.on("addstream", function (event) {
                 console.log('remote addstream', event);
@@ -247,23 +245,21 @@ export default {
             };
 
             const options = {
-                'eventHandlers': eventHandlers,
+                eventHandlers: eventHandlers,
                 // 配置请求头信息
-                'extraHeaders': ["X-set-id: 1"],
-                'mediaConstraints': {'audio': true, 'video': false},
+                extraHeaders: ["X-set-id: 1"],
+                mediaConstraints: {audio: true, video: false},
                 pcConfig:
                     {
-                        "iceServers":
+                        iceServers:
                             [
                                 {
-                                    "urls":
+                                    urls:
                                         [
-                                            "stun:stun.qq.com"
+                                            "stun:stun.qq.com", "stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302", "stun:stun3.l.google.com:19302", "stun:stun4.l.google.com:19302"
                                         ]
                                 },
-                            ],
-                        "iceTransportPolicy": "all",
-                        "rtcpMuxPolicy": "negotiate"
+                            ]
                     },
             };
             const session = this.ua.call(this.callSipAdder, options);
