@@ -66,8 +66,6 @@ export default {
                         "iceTransportPolicy": "all",
                         "rtcpMuxPolicy": "negotiate"
                     },
-                rtcOfferConstraints: {'offerToReceiveAudio': true, 'offerToReceiveVideo': false},
-                sessionTimersExpires: 3600 * 24
             }
         }
     },
@@ -97,8 +95,7 @@ export default {
                 // 计时器
                 session_timers: false,
                 // 注册会话超时时间
-                register_expires: 3600,
-                stun_servers: ["stun:stun.qq.com"]
+                register_expires: 3600
             };
             this.ua = new JsSIP.UA(configuration);
             this.ua.on("registered", function (data) {
@@ -268,8 +265,6 @@ export default {
                         "iceTransportPolicy": "all",
                         "rtcpMuxPolicy": "negotiate"
                     },
-                rtcOfferConstraints: {'offerToReceiveAudio': true, 'offerToReceiveVideo': false},
-                sessionTimersExpires: 3600 * 24
             };
             const session = this.ua.call(this.callSipAdder, options);
             console.log(session);

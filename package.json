@@ -6,12 +6,13 @@
     "serve": "vue-cli-service serve",
     "serve-ssl": "vue-cli-service serve --https=true",
     "build": "vue-cli-service build",
+    "build-dist": "vue-cli-service build --dest=G:\\Work\\jsSip-demo",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
     "core-js": "^3.6.5",
     "element-ui": "^2.15.3",
-    "jssip": "^3.8.0",
+    "jssip": "^3.9.4",
     "vue": "^2.6.11"
   },
   "devDependencies": {
