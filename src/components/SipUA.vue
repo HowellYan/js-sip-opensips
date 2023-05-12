@@ -18,7 +18,7 @@
         <br/>
         <el-button @click="getMediaState">getMediaState</el-button>
         <br/>
-        <video id="video" ref="localVideoView" autoplay height="320px" width="420px"/>
+        <video id="video" ref="localVideoView" height="320px" width="420px"/>
         <video ref="remoteVideoStream" autoplay height="320px" width="420px"/>
         <audio ref="remoteAudioView" autoplay controls/>
     </div>
@@ -63,6 +63,12 @@ export default {
                                         ]
                                 },
                             ],
+                        iceTransportPolicy: "all",
+                        iceCandidatePoolSize: 10,
+                        iceCandidatePriority: {
+                            type: "srflx",
+                            priority: "high"
+                        }
                     },
             }
         }
@@ -105,7 +111,7 @@ export default {
             const video = this.$refs.localVideoView;
             video.srcObject = stream;
             video.onloadedmetadata = function (e) {
-                video.play();
+                // video.play();
                 console.log(e);
             };
             this.localStream = stream;
@@ -200,6 +206,13 @@ export default {
                         console.info(data);
                     });
                 }
+                data.session.on("icecandidate", function (event) {
+                    if (event.candidate.type === "srflx" &&
+                        event.candidate.relatedAddress !== null &&
+                        event.candidate.relatedPort !== null) {
+                        event.ready();
+                    }
+                })
             });
 
             // 监听短信
@@ -249,18 +262,7 @@ export default {
                 // 配置请求头信息
                 extraHeaders: ["X-set-id: 1"],
                 mediaConstraints: {audio: true, video: false},
-                pcConfig:
-                    {
-                        iceServers:
-                            [
-                                {
-                                    urls:
-                                        [
-                                            "stun:stun.qq.com", "stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302", "stun:stun3.l.google.com:19302", "stun:stun4.l.google.com:19302"
-                                        ]
-                                },
-                            ]
-                    },
+                pcConfig: this.callOptions.pcConfig
             };
             const session = this.ua.call(this.callSipAdder, options);
             console.log(session);
@@ -268,18 +270,18 @@ export default {
         hangup() {
             for (const item in this.incomingSession) {
                 try {
-                    this.incomingSession.remove(item);
-                    item.terminate();
+                    this.incomingSession[item].terminate();
+                    this.incomingSession.splice(item,1);
                 } catch (e) {
-                    console.log(e);
+                    console.log(this.incomingSession[item], e);
                 }
             }
             for (const item in this.outgoingSession) {
                 try {
-                    this.outgoingSession.remove(item);
-                    item.terminate();
+                    this.outgoingSession[item].terminate();
+                    this.outgoingSession.splice(item, 1);
                 } catch (e) {
-                    console.log(e);
+                    console.log(this.outgoingSession[item], e);
                 }
             }
         },
